@@ -570,7 +570,7 @@ downloadTpl.onclick=function(){
 /* ===== 启动 ===== */
 (function init(){
 
-  fetch('SAM%20CN%20COMM%201.xlsx?v=' + Date.now())
+  fetch('data.json?v=' + Date.now())
     .then(res => res.arrayBuffer())
     .then(buffer => {
 
