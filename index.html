@@ -376,7 +376,7 @@ function buildYearFilter(){
   }
   /* 默认选中最新年份（非 ALL） */
   if(sorted.length>=1){
-    CURRENT_YEAR=sorted[sorted.length-1];
+    CURRENT_YEAR=sorted[sorted.length-2];
     sel.value=CURRENT_YEAR;
   }
   updateYearBadge();
