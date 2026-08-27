@@ -278,84 +278,78 @@ function makeChipMini(type){
 }
 function getStatusInfo(item){
 
-  if(item.status){
+  // 1. Excel 手动状态优先
+  var s = String(item.status || '').trim().toLowerCase();
 
-    var s=item.status.toLowerCase();
-
-    if(s==='completed'){
-      return {
-        text:'✅ Completed',
-        cls:'completed'
-      };
-    }
-
-    if(s==='in progress'){
-      return {
-        text:'🟡 In Progress',
-        cls:'progress'
-      };
-    }
-
-    if(s==='cancelled'){
-      return {
-        text:'❌ Cancelled',
-        cls:'cancelled'
-      };
-    }
+  if(s === 'in progress' || s === 'progress'){
+    return {
+      text:'🟡 In Progress',
+      cls:'progress'
+    };
   }
 
-  if(item.date==='TBD'){
+  if(s === 'cancelled' || s === 'canceled'){
+    return {
+      text:'🔴 Cancelled',
+      cls:'cancelled'
+    };
+  }
+
+  if(s === 'completed' || s === 'complete'){
+    return {
+      text:'✅ Completed',
+      cls:'completed'
+    };
+  }
+
+  // 2. 日期为 TBD 或只有月份，没有准确日期
+  if(!item.date || item.date === 'TBD'){
     return {
       text:'📅 Upcoming',
       cls:'upcoming'
     };
   }
 
-  try{
+  // 3. Excel 没填状态时，根据日期自动判断
+  var year = parseInt(item.year, 10);
+  var parts = String(item.date).split('-');
 
-    var currentYear =
-        parseInt(item.year);
+  if(!isNaN(year) && parts.length === 2){
 
-    var parts =
-        item.date.split('-');
+    var month = parseInt(parts[0], 10);
+    var day = parseInt(parts[1], 10);
 
-    if(parts.length===2){
+    if(
+      !isNaN(month) &&
+      !isNaN(day) &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31
+    ){
+      var activityDate = new Date(year, month - 1, day);
+      var today = new Date();
 
-      var targetDate =
-          new Date(
-            currentYear,
-            parseInt(parts[0])-1,
-            parseInt(parts[1])
-          );
-
-      var today =
-          new Date();
-
+      activityDate.setHours(0,0,0,0);
       today.setHours(0,0,0,0);
 
-      if(targetDate < today){
-
+      // 今天晚于活动日期，自动 Completed
+      if(today > activityDate){
         return {
-          text:'⚠ Overdue Review',
-          cls:'overdue'
-        };
-
-      }else{
-
-        return {
-          text:'📅 Upcoming',
-          cls:'upcoming'
+          text:'✅ Completed',
+          cls:'completed'
         };
       }
     }
+  }
 
-  }catch(e){}
-
+  // 今天、未来日期或无法判断准确日期
   return {
     text:'📅 Upcoming',
     cls:'upcoming'
   };
 }
+
 function buildMiniCard(item){
   var cls=item.role==='leads'?'leads':'contributes';
   var dot=item.role==='leads'?'LEADS':'CON';
@@ -652,13 +646,13 @@ function processFile(f){
 
 downloadTpl.onclick=function(){
   var tpl=[
-    ['Year','Month','Date','Category','Role','Content','Video','Article','Remark 1','Remark 2'],
-    ['2026','Jan','2026-01-30','Event','SAM China leads','Sample Event Title','','','',''],
-    ['2026','Feb','2026-02-10','Media','SAM China contributes','Sample Media Title','Y','Y','',''],
-    ['2027','Jan','2027-01-15','Event','SAM China leads','Another Event','','','','']
+    ['Year','Month','Date','Category','Role','Content','Video','Article','Template'],
+    ['2026','Jan','2026-01-30','Event','SAM China leads','Sample Event Title','','','Completed'],
+    ['2026','Feb','2026-02-10','Media','SAM China contributes','Sample Media Title','Y','Y',''],
+    ['2027','Jan','2027-01-15','Event','SAM China leads','Another Event','','','']
   ];
   var ws=XLSX.utils.aoa_to_sheet(tpl);
-  ws['!cols']=[{wch:6},{wch:8},{wch:12},{wch:10},{wch:24},{wch:50},{wch:8},{wch:8},{wch:14},{wch:14}];
+  ws['!cols']=[{wch:6},{wch:8},{wch:12},{wch:10},{wch:24},{wch:50},{wch:8},{wch:8},{wch:18}];
   var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Template');
   XLSX.writeFile(wb,'SAM_Dashboard_Template.xlsx');
