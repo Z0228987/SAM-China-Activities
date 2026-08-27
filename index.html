@@ -289,7 +289,7 @@ function getStatusInfo(item){
 
   if(s === 'cancelled' || s === 'canceled'){
     return {
-      text:'🔴 Cancelled',
+      text:'❌ Cancelled',
       cls:'cancelled'
     };
   }
@@ -302,14 +302,108 @@ function getStatusInfo(item){
   }
 
   // 2. 日期为 TBD 或只有月份，没有准确日期
-  if(!item.date || item.date === 'TBD'){
-    return {
-      text:'📅 Upcoming',
-      cls:'upcoming'
-    };
-  }
+// 没有具体日期（TBD / Jun / Sep 等）
+if(!item.date || item.date === 'TBD'){
+
+    var monthIndex = MONTHS.indexOf(item.month);
+
+    var today = new Date();
+
+    var currentYear = today.getFullYear();
+    var currentMonth = today.getMonth();
+
+    var itemYear = parseInt(item.year);
+
+    // 年份未来
+    if(itemYear > currentYear){
+        return {
+            text:'📅 Upcoming',
+            cls:'upcoming'
+        };
+    }
+
+    // 年份过去
+    if(itemYear < currentYear){
+        return {
+            text:'✅ Completed',
+            cls:'completed'
+        };
+    }
+
+    // 同一年比较月份
+
+    if(monthIndex > currentMonth){
+
+        return {
+            text:'📅 Upcoming',
+            cls:'upcoming'
+        };
+
+    }else{
+
+        return {
+            text:'✅ Completed',
+            cls:'completed'
+        };
+
+    }
+}
 
   // 3. Excel 没填状态时，根据日期自动判断
+// 只有月份，没有具体日期
+  if(
+      item.date === 'TBD' ||
+      item.date === item.month
+  ){
+
+      var today = new Date();
+
+      var currentYear =
+          today.getFullYear();
+
+      var currentMonth =
+          today.getMonth() + 1;
+
+      var itemYear =
+          parseInt(item.year);
+
+      var itemMonth =
+          MONTHS.indexOf(item.month) + 1;
+
+      // 年份比较
+
+      if(itemYear < currentYear){
+          return {
+              text:'✅ Completed',
+              cls:'completed'
+          };
+      }
+
+      if(itemYear > currentYear){
+          return {
+              text:'📅 Upcoming',
+              cls:'upcoming'
+          };
+      }
+
+      // 同年份比较月份
+
+      if(currentMonth > itemMonth){
+
+          return {
+              text:'✅ Completed',
+              cls:'completed'
+          };
+
+      }else{
+
+          return {
+              text:'📅 Upcoming',
+              cls:'upcoming'
+          };
+
+      }
+  }
   var year = parseInt(item.year, 10);
   var parts = String(item.date).split('-');
 
