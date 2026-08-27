@@ -100,6 +100,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,
 .chip-mini.video{background:#81D4FA;color:#01579B}
 .chip-mini.article{background:#FFF59D;color:#8C6E00}
 .chip-mini.tbt{background:#EEEEEE;color:#5E6470}
+.status-tag{margin-top: 4px;padding:3px 8px;border-radius:6px;font-size:9px;font-size:9px;font-weight:700;display:inline-block}
+.status-tag.completed{background:#E8F5E9;color:#2E7D32;}
+.status-tag.progress{background:#FFF8E1;color:#F57F17;}
+.status-tag.cancelled{background:#FFEBEE;color:#C62828;}
+.status-tag.overdue{background:#FFF3E0;color:#E65100;}
+.status-tag.upcoming{background:#E3F2FD;color:#1565C0;}
 .cell-empty{color:#bbb;font-size:10px;font-style:italic;padding:4px 0}
 .foot{text-align:center;color:#95a5a6;font-size:11px;padding:14px 0 6px}
 @media(max-width:900px){.grid-table{grid-template-columns:60px repeat(6,1fr)}.ev-mini .ev-title{font-size:10px}.stats-row{flex-direction:column}}
@@ -270,6 +276,86 @@ function makeChipMini(type){
   var cls=type==='video'?'video':type==='article'?'article':'tbt';
   return '<span class="chip-mini '+cls+'">'+ICO[type]+type.toUpperCase()+'</span>';
 }
+function getStatusInfo(item){
+
+  if(item.status){
+
+    var s=item.status.toLowerCase();
+
+    if(s==='completed'){
+      return {
+        text:'✅ Completed',
+        cls:'completed'
+      };
+    }
+
+    if(s==='in progress'){
+      return {
+        text:'🟡 In Progress',
+        cls:'progress'
+      };
+    }
+
+    if(s==='cancelled'){
+      return {
+        text:'❌ Cancelled',
+        cls:'cancelled'
+      };
+    }
+  }
+
+  if(item.date==='TBD'){
+    return {
+      text:'📅 Upcoming',
+      cls:'upcoming'
+    };
+  }
+
+  try{
+
+    var currentYear =
+        parseInt(item.year);
+
+    var parts =
+        item.date.split('-');
+
+    if(parts.length===2){
+
+      var targetDate =
+          new Date(
+            currentYear,
+            parseInt(parts[0])-1,
+            parseInt(parts[1])
+          );
+
+      var today =
+          new Date();
+
+      today.setHours(0,0,0,0);
+
+      if(targetDate < today){
+
+        return {
+          text:'⚠ Overdue Review',
+          cls:'overdue'
+        };
+
+      }else{
+
+        return {
+          text:'📅 Upcoming',
+          cls:'upcoming'
+        };
+      }
+    }
+
+  }catch(e){}
+
+  return {
+    text:'📅 Upcoming',
+    cls:'upcoming'
+  };
+}
 function buildMiniCard(item){
   var cls=item.role==='leads'?'leads':'contributes';
   var dot=item.role==='leads'?'LEADS':'CON';
@@ -284,8 +370,17 @@ function buildMiniCard(item){
     if(!item.video&&!item.article) tags+=makeChipMini('tbt');
     html+='<div class="tags-mini">'+tags+'</div>';
   }
+  var statusInfo=getStatusInfo(item);
+
+  html+=
+  '<div class="status-tag '+
+  statusInfo.cls+
+  '">'+
+  statusInfo.text+
+  '</div>';
   html+='</div>';
   return html;
+
 }
 function buildHalfGrid(months,data,label,hLed,hCon){
   var calIcon='<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>';
@@ -394,7 +489,7 @@ document.getElementById('yearFilter').onchange=function(){
 
 /* ===== 动态表头映射 ===== */
 function buildHeaderMap(row){
-  var map={year:null,month:null,date:null,cat:null,role:null,title:null,video:null,article:null};
+  var map={year:null,month:null,date:null,cat:null,role:null,title:null,video:null,article:null,status:null};
   var keys=Object.keys(row);
   for(var i=0;i<keys.length;i++){
     var k=keys[i],lk=k.toLowerCase().trim();
@@ -406,6 +501,7 @@ function buildHeaderMap(row){
     else if(lk==='content'||lk==='title')                                    map.title=k;
     else if(lk==='video')                                                    map.video=k;
     else if(lk==='article')                                                  map.article=k;
+    else if(lk==='status')                                                   map.status=k
   }
   return map;
 }
@@ -488,7 +584,8 @@ function parseRows(rows){
       cat:toCat(catRaw),
       role:toRole(roleRaw),
       video:videoKey?toBool(r[videoKey]):false,
-      article:articleKey?toBool(r[articleKey]):false
+      article:articleKey?toBool(r[articleKey]):false,
+      status:hmap.status ? String(r[hmap.status]||'').trim() : ''
     });
   }
   return result;
