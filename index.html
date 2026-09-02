@@ -103,6 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,
 .status-tag{margin-top: 4px;padding:3px 8px;border-radius:6px;font-size:9px;font-size:9px;font-weight:700;display:inline-block}
 .status-tag.completed{background:#E8F5E9;color:#2E7D32;}
 .status-tag.progress{background:#FFF8E1;color:#F57F17;}
+.status-tag.delayed{background:#FCE4EC;color:#AD1457;}
 .status-tag.cancelled{background:#FFEBEE;color:#C62828;}
 .status-tag.upcoming{background:#E3F2FD;color:#1565C0;}
 .cell-empty{color:#bbb;font-size:10px;font-style:italic;padding:4px 0}
@@ -284,6 +285,13 @@ function getStatusInfo(item){
     return {
       text:'🟡 In Progress',
       cls:'progress'
+    };
+  }
+
+  if(s === 'delayed' || s === 'delay'){
+    return {
+      text:'⏸ Delayed',
+      cls:'delayed'
     };
   }
 
@@ -741,9 +749,9 @@ function processFile(f){
 
 downloadTpl.onclick=function(){
   var tpl=[
-    ['Year','Month','Date','Category','Role','Content','Video','Article','Template'],
+    ['Year','Month','Date','Category','Role','Content','Video','Article','Status'],
     ['2026','Jan','2026-01-30','Event','SAM China leads','Sample Event Title','','','Completed'],
-    ['2026','Feb','2026-02-10','Media','SAM China contributes','Sample Media Title','Y','Y',''],
+    ['2026','Feb','2026-02-10','Media','SAM China contributes','Sample Media Title','Y','Y','Delayed'],
     ['2027','Jan','2027-01-15','Event','SAM China leads','Another Event','','','']
   ];
   var ws=XLSX.utils.aoa_to_sheet(tpl);
